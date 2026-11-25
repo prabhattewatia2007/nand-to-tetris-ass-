@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CompBox Studio — Hack Computer Simulator (K = 24)</title>
+<style>
+
+:root{--bg:#080b16;--panel:#11182a;--panel2:#151f35;--line:#26334d;--text:#edf2ff;--muted:#91a0bb;--accent:#8b5cf6;--accent2:#22d3ee;--good:#34d399;--mono:"JetBrains Mono",Consolas,monospace;--sans:Inter,"Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% -10%,#25204c 0,transparent 38%),var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
+header{padding:22px clamp(18px,4vw,56px);display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid var(--line);background:rgba(9,13,27,.82);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:13px}.brand-mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#4f46e5);font-weight:900;font-size:20px;box-shadow:0 8px 28px #8b5cf644}.brand h1{font-size:1.05rem;margin:0;letter-spacing:.01em}.brand p{margin:2px 0 0;color:var(--muted);font-size:.76rem}.profile{text-align:right;color:var(--muted);font-size:.78rem}.profile strong{color:var(--text);display:block;font-size:.88rem}
+main{max-width:1500px;margin:0 auto;padding:30px clamp(16px,3vw,42px) 54px;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);gap:22px}.hero{grid-column:1/-1;display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:2px}.eyebrow{color:#b8a5ff;text-transform:uppercase;letter-spacing:.16em;font-size:.68rem;font-weight:800}.hero h2{font-size:clamp(1.5rem,3vw,2.25rem);line-height:1.15;margin:7px 0}.hero p{margin:0;color:var(--muted);max-width:650px;font-size:.9rem}.hero-chip{border:1px solid #574b89;background:#211b3c;color:#d9ceff;padding:9px 13px;border-radius:999px;font:600 .75rem var(--mono);white-space:nowrap}
+.panel{background:linear-gradient(145deg,rgba(21,31,53,.97),rgba(15,22,39,.98));border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:18px;box-shadow:0 14px 40px #00000020;min-width:0}.panel h2{margin:0 0 15px;font-size:.93rem;font-weight:750;display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}.tag{font:600 .72rem var(--mono);color:var(--muted);background:#202b42;padding:5px 9px;border-radius:7px}.tag.active{color:var(--good);background:#10382f}
+canvas#hackScreen{width:100%;max-width:100%;aspect-ratio:2/1;image-rendering:pixelated;background:#f8fafc;border:1px solid #465675;border-radius:10px;display:block;cursor:crosshair}.hover-bar{font: .72rem var(--mono);color:var(--muted);margin-top:9px;min-height:1.2em}.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}button{font:650 .78rem var(--sans);padding:9px 13px;border-radius:9px;border:1px solid #354461;background:#202b42;color:var(--text);cursor:pointer;transition:.18s}button:hover{border-color:#8b5cf6;background:#2a3150;transform:translateY(-1px)}button.primary{background:linear-gradient(135deg,#8b5cf6,#6d4be8);border-color:transparent;color:white}button.primary:hover{filter:brightness(1.12)}button.on{background:#11634e;border-color:#1b9b79;color:#d9fff3}
+.regs{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:9px;margin-top:16px}.reg{border:1px solid var(--line);background:#0d1425;border-radius:11px;padding:10px 12px;font-family:var(--mono)}.reg .k{font-size:.65rem;color:var(--muted)}.reg .v{font-size:.94rem;font-weight:750;color:#d8ccff;overflow-wrap:anywhere}table{width:100%;border-collapse:separate;border-spacing:0;font-size:.76rem;font-family:var(--mono);overflow:hidden;border:1px solid var(--line);border-radius:9px}th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left}tr:last-child td{border-bottom:0}th{background:#1b2740;color:#aebbd3;font-weight:650}td{color:#dce5f7} .mem-row{display:flex;gap:8px;align-items:center;margin-bottom:13px;flex-wrap:wrap}.mem-row label{font-size:.78rem;color:var(--muted)}input[type=number]{font: .78rem var(--mono);padding:9px 10px;border:1px solid #354461;border-radius:8px;width:112px;background:#0b1221;color:var(--text);outline:none}input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #8b5cf633}.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:11px;margin-bottom:12px}.field-grid label{display:flex;flex-direction:column;gap:6px;font-size:.72rem;color:var(--muted)}.field-grid input{width:100%}.warn{margin:10px 0;font-size:.78rem;color:#fca5a5;min-height:1.1em}td.changed{color:#fbbf24;font-weight:800}canvas#loupe{width:100%;max-width:100%;image-rendering:pixelated;border:1px solid #465675;border-radius:9px;display:block;background:#f8fafc}
+@media(max-width:1000px){main{grid-template-columns:1fr}.hero{align-items:start;flex-direction:column}}@media(max-width:560px){header{align-items:flex-start}.profile{max-width:45%}.panel{padding:14px;border-radius:14px}.controls button{flex:1 1 auto}.mem-row input{flex:1}}
+
+.parts-wrap{max-width:1500px;margin:0 auto 44px;padding:0 clamp(16px,3vw,42px)}
+.part-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.part-tabs button.tab-active{background:linear-gradient(135deg,#8b5cf6,#6d4be8);border-color:transparent;color:#fff}
+.code-box{background:#080e1c;color:#dce7ff;border:1px solid #293752;border-radius:10px;padding:14px 16px;font:.75rem/1.55 var(--mono);overflow:auto;max-height:380px;margin:0;white-space:pre}
+.asm-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.asm-grid{grid-template-columns:1fr}}
+textarea.asm-in{width:100%;min-height:240px;font:.76rem/1.5 var(--mono);padding:12px;border:1px solid #354461;border-radius:9px;resize:vertical;background:#0b1221;color:var(--text)}
+.asm-warn,.asm-err{border-radius:9px;padding:10px 12px;font:.75rem/1.5 var(--mono);margin-bottom:10px;white-space:pre-wrap}
+.asm-warn{background:#3a2b12;border:1px solid #9a6a1e;color:#fcd58b;display:none}
+.asm-err{background:#3b1720;border:1px solid #a43b50;color:#ffc1cb;display:none}
+.pass-txt{color:var(--good);font-weight:800}
+@media(max-width:560px){.parts-wrap{padding:0 14px}.part-tabs button{flex:1 1 auto}}
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CompBox — Hack Computer &amp; Box.hack Simulator</h1>
+  <div class="meta">Prabhat Tewatia | 2501730207 | Display = 07 | Box: 16&times;20 px @ Row 24 (RAM[17152])</div>
+</header>
+
+<main>
+  <div>
+    <div class="panel">
+      <h2>
+        <span>Hack Screen (512 &times; 256) — Running <code>capstone/Box.hack</code></span>
+        <span class="tag" id="kbdBadge">RAM[KBD] = 0</span>
+      </h2>
+      <canvas id="hackScreen" width="512" height="256"></canvas>
+      <div class="hover-bar" id="hoverInfo">Hover over the screen to inspect (row, col) and Screen RAM address.</div>
+
+      <div class="controls">
+        <button class="primary" id="holdKeyBtn"
+          onmousedown="setVirtualKey(65)" onmouseup="setVirtualKey(0)" onmouseleave="setVirtualKey(0)"
+          ontouchstart="setVirtualKey(65)" ontouchend="setVirtualKey(0)">
+          Hold Key ('A' = 65)
+        </button>
+        <button id="toggleKeyBtn" onclick="toggleLatchKey()">Toggle Key Hold</button>
+        <button id="pauseBtn" onclick="togglePause()">Pause</button>
+        <button onclick="singleStep()">Step 1 Inst</button>
+        <button onclick="resetCPU()">Reset</button>
+      </div>
+
+      <div class="regs">
+        <div class="reg"><div class="k">PC</div><div class="v" id="stPC">0</div></div>
+        <div class="reg"><div class="k">Next Inst</div><div class="v" id="stInst">@17152</div></div>
+        <div class="reg"><div class="k">A</div><div class="v" id="stA">0</div></div>
+        <div class="reg"><div class="k">D</div><div class="v" id="stD">0</div></div>
+        <div class="reg"><div class="k">RAM[24576]</div><div class="v" id="stKBD">0</div></div>
+        <div class="reg"><div class="k" id="lblTop">RAM[17152]</div><div class="v" id="stTop">0</div></div>
+        <div class="reg"><div class="k" id="lblBot">RAM[17760]</div><div class="v" id="stBot">0</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span>Memory.hdl Address Map</span><span class="tag" id="memSegTag">Screen</span></h2>
+      <div class="mem-row">
+        <label for="memAddr" style="font-size:0.84rem;">Address (0–24576):</label>
+        <input type="number" id="memAddr" min="0" max="24576" value="17152" oninput="renderMem()" />
+        <button onclick="setMem(0)">RAM[0]</button>
+        <button onclick="setMem(16384)">SCREEN</button>
+        <button onclick="setMem(17152)">Row 24</button>
+        <button onclick="setMem(24576)">KBD</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Hex</th><th>15-bit Binary</th><th>address[13..14]</th><th>Mapped Device</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="mHex">0x41C0</td>
+            <td id="mBin">10 0000111000000</td>
+            <td id="mSel">10</td>
+            <td id="mDev">Screen[448] (Row 24, Word 0)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2><span>What if K (or the box) changes?</span><span class="tag" id="cfgState">K = 24 (original)</span></h2>
+
+      <div class="field-grid">
+        <label>K <input type="number" id="inK" min="0" max="99" value="24" oninput="cfgFromK()" /></label>
+        <label>Start row <input type="number" id="inRow" min="0" max="255" value="24" oninput="cfgFromFields()" /></label>
+        <label>Start column (words) <input type="number" id="inCol" min="0" max="31" value="0" oninput="cfgFromFields()" /></label>
+        <label>Height (rows) <input type="number" id="inH" min="1" max="256" value="20" oninput="cfgFromFields()" /></label>
+        <label>Width (words) <input type="number" id="inW" min="1" max="32" value="1" oninput="cfgFromFields()" /></label>
+      </div>
+      <div class="hover-bar">Changing K sets row = K and width = (K mod 4) + 1 words. The other fields can be edited on their own.</div>
+
+      <div class="controls">
+        <button onclick="nudge('row', 10)">Move down 10 rows</button>
+        <button onclick="nudge('row', -10)">Move up 10 rows</button>
+        <button onclick="nudge('col', 2)">Move right 2 words</button>
+        <button onclick="nudge('h', 10)">Taller by 10</button>
+        <button onclick="nudge('w', 1)">Wider by 1 word</button>
+        <button onclick="resetK24()">Back to K = 24</button>
+      </div>
+
+      <div class="warn" id="cfgWarn"></div>
+
+      <table>
+        <tbody>
+          <tr><th>Rows covered</th><td id="oRows"></td></tr>
+          <tr><th>Width</th><td id="oWidth"></td></tr>
+          <tr><th>Start address</th><td id="oStart"></td></tr>
+          <tr><th>Last word</th><td id="oLast"></td></tr>
+          <tr><th>Words painted</th><td id="oWords"></td></tr>
+          <tr><th>K mod 3</th><td id="oMod3"></td></tr>
+        </tbody>
+      </table>
+
+      <h2 style="margin-top:14px;"><span>Lines to edit in Box.asm</span></h2>
+      <table>
+        <thead><tr><th>Line</th><th>Original (K = 24)</th><th>Now</th></tr></thead>
+        <tbody>
+          <tr><td>start address</td><td>@17152</td><td id="eStart"></td></tr>
+          <tr><td>height</td><td>@20</td><td id="eH"></td></tr>
+          <tr><td>width</td><td>@1</td><td id="eW"></td></tr>
+        </tbody>
+      </table>
+      <div class="hover-bar">Only these three constants change. The row step of +32 words never changes, because every screen row is 32 words wide. Re-assemble and reload Box.hack after editing.</div>
+    </div>
+
+    <div class="panel">
+      <h2><span id="loupeTitle">4&times; View</span></h2>
+      <canvas id="loupe" width="320" height="192"></canvas>
+      <div class="hover-bar">Dashed outline marks where the box will be drawn. Hold a key to see it filled.</div>
+    </div>
+  </div>
+</main>
+
+<section class="parts-wrap">
+  <!-- PART A -->
+  <div class="panel">
+    <h2>
+      <span>Part A — Build the Computer (HDL)</span>
+      <span class="tag">CPU.hdl &bull; Memory.hdl &bull; Computer.hdl</span>
+    </h2>
+    <table style="margin-bottom:12px;">
+      <thead>
+        <tr><th>Official Test Script</th><th>Chip</th><th>Verified Behaviour</th><th>Result</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CPU.tst</td><td>CPU.hdl</td><td>A/C decode, ALU control, all 7 jumps, reset</td><td class="pass-txt">PASS</td></tr>
+        <tr><td>Memory.tst</td><td>Memory.hdl</td><td>RAM16K, Screen, Keyboard ('K'/'Y'), segment isolation</td><td class="pass-txt">PASS</td></tr>
+        <tr><td>ComputerAdd.tst</td><td>Computer.hdl</td><td>Runs Add.hack (2 + 3 = 5 in RAM[0]) + reset</td><td class="pass-txt">PASS</td></tr>
+        <tr><td>ComputerMax.tst</td><td>Computer.hdl</td><td>Runs Max.hack conditional branching</td><td class="pass-txt">PASS</td></tr>
+        <tr><td>ComputerRect.tst</td><td>Computer.hdl</td><td>Runs Rect.hack (16&times;4 black rectangle on Screen)</td><td class="pass-txt">PASS</td></tr>
+      </tbody>
+    </table>
+    <div class="part-tabs">
+      <button class="tab-active" onclick="showPartA('CPU.hdl', this)">CPU.hdl</button>
+      <button onclick="showPartA('Memory.hdl', this)">Memory.hdl</button>
+      <button onclick="showPartA('Computer.hdl', this)">Computer.hdl</button>
+      <button style="margin-left:auto;" onclick="copyCode('partACode', this)">Copy</button>
+    </div>
+    <pre class="code-box" id="partACode"></pre>
+    <div class="hover-bar">Built-in ARegister, DRegister, ALU, PC, RAM16K, ROM32K, Screen, Keyboard and primitive gates are used per Project 5 test scripts.</div>
+  </div>
+
+  <!-- PART B -->
+  <div class="panel">
+    <h2>
+      <span>Part B — Python Hack Assembler (<code>assembler.py</code>)</span>
+      <span class="tag">K = 24 &rArr; 24 mod 3 = 0 (standard validation mode)</span>
+    </h2>
+    <table style="margin-bottom:12px;">
+      <thead>
+        <tr><th>Official Program</th><th>Instructions</th><th>Comparison vs. Official Assembler</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Add.asm</td><td>6</td><td class="pass-txt">Exact bit-for-bit match</td></tr>
+        <tr><td>Max.asm</td><td>16</td><td class="pass-txt">Exact bit-for-bit match</td></tr>
+        <tr><td>Rect.asm</td><td>25</td><td class="pass-txt">Exact bit-for-bit match</td></tr>
+        <tr><td>Pong.asm</td><td>27,483</td><td class="pass-txt">Exact bit-for-bit match</td></tr>
+      </tbody>
+    </table>
+    <div class="part-tabs">
+      <button class="tab-active" onclick="showPartB('code', this)">assembler.py</button>
+      <button onclick="showPartB('try', this)">Try Assembler (Duplicate-label validation demo)</button>
+      <button id="copyPartBBtn" style="margin-left:auto;" onclick="copyCode('partBCode', this)">Copy</button>
+    </div>
+    <pre class="code-box" id="partBCode"></pre>
+    <div id="partBTry" style="display:none;">
+      <div class="controls" style="margin:0 0 8px;">
+        <button class="primary" onclick="runBrowserAssembler()">Assemble</button>
+        <button onclick="loadAsmSample('test_dup_labels.asm')">Load test_dup_labels.asm</button>
+        <button onclick="loadAsmSample('Box.asm')">Load Box.asm</button>
+      </div>
+      <div class="asm-warn" id="asmWarn"></div>
+      <div class="asm-err" id="asmErr"></div>
+      <div class="asm-grid">
+        <div>
+          <div class="hover-bar" style="margin:0 0 4px;">Hack Assembly (.asm)</div>
+          <textarea class="asm-in" id="asmInput" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="hover-bar" style="margin:0 0 4px;" id="asmOutLabel">Generated Machine Code (.hack)</div>
+          <pre class="code-box" id="asmOutput" style="min-height:240px;max-height:280px;"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART C -->
+  <div class="panel">
+    <h2>
+      <span>Part C — Interactive Box Program (<code>Box.asm</code> &rarr; <code>Box.hack</code>)</span>
+      <span class="tag">Row 24 &bull; 20 rows &bull; 16 px (1 word) &bull; 155 instructions</span>
+    </h2>
+    <table style="margin-bottom:12px;">
+      <thead>
+        <tr><th>Phase</th><th>RAM[24576] (KBD)</th><th>Row 23 Guard (17120)</th><th>Row 24 Box (17152)</th><th>Col 1 Guard (17153)</th><th>Row 43 Box (17760)</th><th>Row 44 Guard (17792)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Idle</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Key 'A' held</td><td>65</td><td>0</td><td>-1</td><td>0</td><td>-1</td><td>0</td></tr>
+        <tr><td>Released</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Space held</td><td>32</td><td>0</td><td>-1</td><td>0</td><td>-1</td><td>0</td></tr>
+      </tbody>
+    </table>
+    <div class="hover-bar">Hold any key to draw the black box with the white number <strong>07</strong> centered inside; release the key to clear both.</div>
+    <div class="part-tabs">
+      <button class="tab-active" onclick="showPartC('Box.asm', this)">Box.asm</button>
+      <button onclick="showPartC('Box.hack', this)">Box.hack (155 instructions)</button>
+      <button style="margin-left:auto;" onclick="copyCode('partCCode', this)">Copy</button>
+    </div>
+    <pre class="code-box" id="partCCode"></pre>
+  </div>
+</section>
+
+
+<script>
+const BOX_HACK = [
+  "0100001100000000",
+  "1110110000010000",
+  "0000000000010000",
+  "1110001100001000",
+  "0000000000010100",
+  "1110110000010000",
+  "0000000000010001",
+  "1110001100001000",
+  "0000000000000001",
+  "1110110000010000",
+  "0000000000010010",
+  "1110001100001000",
+  "0000000000010011",
+  "1110101010001000",
+  "0110000000000000",
+  "1111110000010000",
+  "0000000000010110",
+  "1110001100000010",
+  "0000000000010100",
+  "1110111010001000",
+  "0000000000011000",
+  "1110101010000111",
+  "0000000000010100",
+  "1110101010001000",
+  "0000000000010100",
+  "1111110000010000",
+  "0000000000010011",
+  "1111010011010000",
+  "0000000000001110",
+  "1110001100000010",
+  "0000000000010100",
+  "1111110000010000",
+  "0000000000010011",
+  "1110001100001000",
+  "0000000000010000",
+  "1111110000010000",
+  "0000000000010101",
+  "1110001100001000",
+  "0000000000010001",
+  "1111110000010000",
+  "0000000000010110",
+  "1110001100001000",
+  "0000000000010110",
+  "1111110000010000",
+  "0000000001001101",
+  "1110001100000010",
+  "0000000000010101",
+  "1111110000010000",
+  "0000000000010111",
+  "1110001100001000",
+  "0000000000010010",
+  "1111110000010000",
+  "0000000000011000",
+  "1110001100001000",
+  "0000000000011000",
+  "1111110000010000",
+  "0000000001000101",
+  "1110001100000010",
+  "0000000000010100",
+  "1111110000010000",
+  "0000000000010111",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000010111",
+  "1111110111001000",
+  "0000000000011000",
+  "1111110010001000",
+  "0000000000110110",
+  "1110101010000111",
+  "0000000000100000",
+  "1110110000010000",
+  "0000000000010101",
+  "1111000010001000",
+  "0000000000010110",
+  "1111110010001000",
+  "0000000000101010",
+  "1110101010000111",
+  "0000000000010100",
+  "1111110000010000",
+  "0000000000001110",
+  "1110001100000010",
+  "0100001100000000",
+  "1110110000010000",
+  "0000000011000000",
+  "1110000010010000",
+  "0000000000011001",
+  "1110001100001000",
+  "0001000101111100",
+  "1110110000010000",
+  "1110001101010000",
+  "0000000000011001",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000100000",
+  "1110110000010000",
+  "0000000000011001",
+  "1111000010001000",
+  "0001000101000000",
+  "1110110000010000",
+  "1110001101010000",
+  "0000000000011001",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000100000",
+  "1110110000010000",
+  "0000000000011001",
+  "1111000010001000",
+  "0001000101000000",
+  "1110110000010000",
+  "1110001101010000",
+  "0000000000011001",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000100000",
+  "1110110000010000",
+  "0000000000011001",
+  "1111000010001000",
+  "0001111101111100",
+  "1110110000010000",
+  "1110001101010000",
+  "0000000000011001",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000100000",
+  "1110110000010000",
+  "0000000000011001",
+  "1111000010001000",
+  "0001000000000100",
+  "1110110000010000",
+  "1110001101010000",
+  "0000000000011001",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000100000",
+  "1110110000010000",
+  "0000000000011001",
+  "1111000010001000",
+  "0001000000000100",
+  "1110110000010000",
+  "1110001101010000",
+  "0000000000011001",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000100000",
+  "1110110000010000",
+  "0000000000011001",
+  "1111000010001000",
+  "0001000001111100",
+  "1110110000010000",
+  "1110001101010000",
+  "0000000000011001",
+  "1111110000100000",
+  "1110001100001000",
+  "0000000000001110",
+  "1110101010000111"
+];
+
+const COMP_REV = {
+  '0101010':'0','0111111':'1','0111010':'-1','0001100':'D','0110000':'A',
+  '0001101':'!D','0110001':'!A','0001111':'-D','0110011':'-A','0011111':'D+1',
+  '0110111':'A+1','0001110':'D-1','0110010':'A-1','0000010':'D+A','0010011':'D-A',
+  '0000111':'A-D','0000000':'D&A','0010101':'D|A','1110000':'M','1110001':'!M',
+  '1110011':'-M','1110111':'M+1','1110010':'M-1','1000010':'D+M','1010011':'D-M',
+  '1000111':'M-D','1000000':'D&M','1010101':'D|M'
+};
+const DEST_REV = ['','M','D','MD','A','AM','AD','AMD'];
+const JUMP_REV = ['','JGT','JEQ','JGE','JLT','JNE','JLE','JMP'];
+
+const ROM_BASE = BOX_HACK.map(b => parseInt(b, 2));
+const rom = ROM_BASE.slice();
+const cfg = { row: 24, col: 0, h: 20, w: 1 };
+const ORIGINAL = { row: 24, col: 0, h: 20, w: 1 };
+const ram = new Int16Array(24577);
+let regA = 0, regD = 0, pc = 0;
+let physicalKey = 0, virtualKey = 0, latchedKey = 0, paused = false;
+
+function toSigned16(v) { return (v << 16) >> 16; }
+
+function alu(x, y, c) {
+  let vx = (c & 32) ? 0 : x;
+  if (c & 16) vx = ~vx;
+  let vy = (c & 8) ? 0 : y;
+  if (c & 4) vy = ~vy;
+  let out = (c & 2) ? (vx + vy) : (vx & vy);
+  if (c & 1) out = ~out;
+  return toSigned16(out);
+}
+
+function stepCPU() {
+  const inst = rom[pc] || 0;
+  if ((inst & 0x8000) === 0) {
+    regA = inst & 0x7FFF;
+    pc = (pc + 1) & 0x7FFF;
+  } else {
+    const aBit = (inst >> 12) & 1;
+    const cBits = (inst >> 6) & 0x3F;
+    const dBits = (inst >> 3) & 0x7;
+    const jBits = inst & 0x7;
+    const inM = (regA >= 0 && regA < ram.length) ? ram[regA] : 0;
+    const out = alu(regD, aBit ? inM : regA, cBits);
+    if ((dBits & 1) && regA >= 0 && regA < 24576) ram[regA] = out;
+    if (dBits & 2) regD = out;
+    if (dBits & 4) regA = out;
+    const jump = ((jBits & 4) && out < 0) || ((jBits & 2) && out === 0) || ((jBits & 1) && out > 0);
+    pc = jump ? (regA & 0x7FFF) : ((pc + 1) & 0x7FFF);
+  }
+}
+
+function disassemble(inst) {
+  if ((inst & 0x8000) === 0) return '@' + (inst & 0x7FFF);
+  const compKey = ((inst >> 6) & 0x7F).toString(2).padStart(7, '0');
+  const d = DEST_REV[(inst >> 3) & 7];
+  const j = JUMP_REV[inst & 7];
+  return (d ? d + '=' : '') + (COMP_REV[compKey] || '?') + (j ? ';' + j : '');
+}
+
+const scr = document.getElementById('hackScreen');
+const ctx = scr.getContext('2d');
+const img = ctx.createImageData(512, 256);
+const loupeCtx = document.getElementById('loupe').getContext('2d');
+
+function render() {
+  const d = img.data;
+  for (let r = 0; r < 256; r++) {
+    const base = 16384 + r * 32;
+    for (let w = 0; w < 32; w++) {
+      const word = ram[base + w];
+      const p0 = (r * 512 + w * 16) * 4;
+      for (let b = 0; b < 16; b++) {
+        const c = ((word >> b) & 1) ? 0 : 255;
+        const i = p0 + b * 4;
+        d[i] = c; d[i+1] = c; d[i+2] = c; d[i+3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(220, 38, 38, 0.75)';
+  ctx.setLineDash([4, 3]);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cfg.col * 16 + 0.5, cfg.row + 0.5, cfg.w * 16 - 1, cfg.h - 1);
+  ctx.restore();
+
+  const sx = Math.min(Math.max(cfg.col * 16 - 16, 0), 512 - 80);
+  const sy = Math.min(Math.max(cfg.row - 8, 0), 256 - 48);
+  loupeCtx.imageSmoothingEnabled = false;
+  loupeCtx.clearRect(0, 0, 320, 192);
+  loupeCtx.drawImage(scr, sx, sy, 80, 48, 0, 0, 320, 192);
+  loupeCtx.strokeStyle = '#dc2626';
+  loupeCtx.setLineDash([4, 3]);
+  loupeCtx.lineWidth = 1.5;
+  loupeCtx.strokeRect((cfg.col * 16 - sx) * 4, (cfg.row - sy) * 4, cfg.w * 16 * 4, cfg.h * 4);
+  loupeCtx.setLineDash([]);
+  document.getElementById('loupeTitle').textContent =
+    `4\u00d7 view (rows ${sy}..${sy + 47}, cols ${sx}..${sx + 79})`;
+
+  const kbd = ram[24576];
+  const startAddr = 16384 + 32 * cfg.row + cfg.col;
+  const lastAddr = 16384 + 32 * (cfg.row + cfg.h - 1) + cfg.col + cfg.w - 1;
+  document.getElementById('stPC').textContent = pc;
+  document.getElementById('stInst').textContent = disassemble(rom[pc] || 0);
+  document.getElementById('stA').textContent = regA;
+  document.getElementById('stD').textContent = regD;
+  document.getElementById('stKBD').textContent = kbd;
+  document.getElementById('lblTop').textContent = 'RAM[' + startAddr + ']';
+  document.getElementById('lblBot').textContent = 'RAM[' + lastAddr + ']';
+  document.getElementById('stTop').textContent = ram[startAddr];
+  document.getElementById('stBot').textContent = ram[lastAddr];
+  const badge = document.getElementById('kbdBadge');
+  badge.textContent = kbd ? `RAM[KBD] = ${kbd} (pressed)` : 'RAM[KBD] = 0';
+  badge.classList.toggle('active', kbd !== 0);
+}
+
+function setVirtualKey(k) {
+  virtualKey = k;
+  document.getElementById('holdKeyBtn').classList.toggle('on', k !== 0);
+}
+function toggleLatchKey() {
+  latchedKey = latchedKey ? 0 : 65;
+  document.getElementById('toggleKeyBtn').classList.toggle('on', latchedKey !== 0);
+}
+function togglePause() {
+  paused = !paused;
+  const b = document.getElementById('pauseBtn');
+  b.textContent = paused ? 'Resume' : 'Pause';
+  b.classList.toggle('on', paused);
+}
+function singleStep() {
+  if (!paused) togglePause();
+  ram[24576] = physicalKey || virtualKey || latchedKey;
+  stepCPU();
+  render();
+}
+function resetCPU() {
+  ram.fill(0); regA = 0; regD = 0; pc = 0;
+  latchedKey = 0; virtualKey = 0; physicalKey = 0;
+  document.getElementById('toggleKeyBtn').classList.remove('on');
+  document.getElementById('holdKeyBtn').classList.remove('on');
+  render();
+}
+
+// ---- Box position / K experiments ----
+// Box.hack stores the start address, height and width with @value
+// instructions at ROM[0], ROM[4] and ROM[8]; patching those three
+// is the same as editing the three constants in Box.asm and re-assembling.
+function readFields() {
+  return {
+    row: parseInt(document.getElementById('inRow').value, 10),
+    col: parseInt(document.getElementById('inCol').value, 10),
+    h: parseInt(document.getElementById('inH').value, 10),
+    w: parseInt(document.getElementById('inW').value, 10)
+  };
+}
+
+function writeFields(c) {
+  document.getElementById('inRow').value = c.row;
+  document.getElementById('inCol').value = c.col;
+  document.getElementById('inH').value = c.h;
+  document.getElementById('inW').value = c.w;
+}
+
+function applyCfg(c) {
+  const warn = document.getElementById('cfgWarn');
+  const vals = [c.row, c.col, c.h, c.w];
+  if (vals.some(v => Number.isNaN(v))) { warn.textContent = 'Enter a number in every field.'; return; }
+  if (c.row < 0 || c.col < 0 || c.h < 1 || c.w < 1) { warn.textContent = 'Row/column cannot be negative; height and width must be at least 1.'; return; }
+  if (c.row + c.h > 256) { warn.textContent = `Not applied: row ${c.row} + height ${c.h} = ${c.row + c.h} goes past the bottom of the screen (256 rows).`; return; }
+  if (c.col + c.w > 32) { warn.textContent = `Not applied: column ${c.col} + width ${c.w} = ${c.col + c.w} words goes past the right edge (32 words per row).`; return; }
+  warn.textContent = '';
+
+  Object.assign(cfg, c);
+  const start = 16384 + 32 * c.row + c.col;
+  const last = 16384 + 32 * (c.row + c.h - 1) + c.col + c.w - 1;
+
+  for (let i = 0; i < rom.length; i++) rom[i] = ROM_BASE[i];
+  rom[0] = start; rom[4] = c.h; rom[8] = c.w;
+  ram.fill(0); regA = 0; regD = 0; pc = 0;
+
+  const K = parseInt(document.getElementById('inK').value, 10);
+  document.getElementById('oRows').textContent = `${c.row}..${c.row + c.h - 1} (${c.h} rows)`;
+  document.getElementById('oWidth').textContent = `${c.w} words = 16 \u00d7 ${c.w} = ${16 * c.w} px`;
+  document.getElementById('oStart').textContent = `16384 + 32 \u00d7 ${c.row} + ${c.col} = ${start}`;
+  document.getElementById('oLast').textContent = `16384 + 32 \u00d7 ${c.row + c.h - 1} + ${c.col + c.w - 1} = ${last}`;
+  document.getElementById('oWords').textContent = `${c.h} \u00d7 ${c.w} = ${c.h * c.w} words (${c.h * c.w * 16} px)`;
+  document.getElementById('oMod3').textContent = Number.isNaN(K) ? '' :
+    `${K} mod 3 = ${K % 3}` + (K % 3 === 2 ? ' \u2192 duplicate-label warning' : ' \u2192 feature from the assignment sheet');
+
+  const setEdit = (id, val, orig) => {
+    const el = document.getElementById(id);
+    el.textContent = '@' + val;
+    el.classList.toggle('changed', val !== orig);
+  };
+  setEdit('eStart', start, 17152);
+  setEdit('eH', c.h, 20);
+  setEdit('eW', c.w, 1);
+
+  const same = c.row === ORIGINAL.row && c.col === ORIGINAL.col && c.h === ORIGINAL.h && c.w === ORIGINAL.w;
+  document.getElementById('cfgState').textContent = same ? 'K = 24 (original)' : 'modified';
+}
+
+function cfgFromK() {
+  const K = parseInt(document.getElementById('inK').value, 10);
+  if (Number.isNaN(K) || K < 0) return;
+  const c = readFields();
+  c.row = K;
+  c.w = (K % 4) + 1;
+  writeFields(c);
+  applyCfg(c);
+}
+
+function cfgFromFields() { applyCfg(readFields()); }
+
+function nudge(field, delta) {
+  const c = readFields();
+  c[field] += delta;
+  writeFields(c);
+  applyCfg(c);
+}
+
+function resetK24() {
+  document.getElementById('inK').value = 24;
+  const c = { row: 24, col: 0, h: 20, w: 1 };
+  writeFields(c);
+  applyCfg(c);
+}
+
+window.addEventListener('keydown', e => {
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  physicalKey = e.key.length === 1 ? e.key.charCodeAt(0) : (e.keyCode || 32);
+});
+window.addEventListener('keyup', () => { physicalKey = 0; });
+window.addEventListener('blur', () => { physicalKey = 0; virtualKey = 0; });
+
+scr.addEventListener('mousemove', e => {
+  const rect = scr.getBoundingClientRect();
+  const col = Math.min(511, Math.max(0, Math.floor((e.clientX - rect.left) * 512 / rect.width)));
+  const row = Math.min(255, Math.max(0, Math.floor((e.clientY - rect.top) * 256 / rect.height)));
+  const addr = 16384 + row * 32 + Math.floor(col / 16);
+  document.getElementById('hoverInfo').textContent =
+    `Row ${row}, Col ${col} -> RAM[${addr}], bit ${col % 16} (value: ${ram[addr]})`;
+});
+
+function setMem(a) { document.getElementById('memAddr').value = a; renderMem(); }
+function renderMem() {
+  const a = Math.max(0, Math.min(24576, parseInt(document.getElementById('memAddr').value || '0', 10)));
+  const bin = a.toString(2).padStart(15, '0');
+  const sel = bin.slice(0, 2);
+  document.getElementById('mHex').textContent = '0x' + a.toString(16).toUpperCase().padStart(4, '0');
+  document.getElementById('mBin').textContent = sel + ' ' + bin.slice(2);
+  document.getElementById('mSel').textContent = sel;
+  let dev = '';
+  if (sel === '00' || sel === '01') dev = `RAM16K[${a}]`;
+  else if (sel === '10') {
+    const off = a - 16384;
+    dev = `Screen[${off}] (Row ${Math.floor(off / 32)}, Word ${off % 32})`;
+  } else dev = a === 24576 ? 'Keyboard (KBD)' : 'Unused';
+  document.getElementById('mDev').textContent = dev;
+  document.getElementById('memSegTag').textContent = sel === '10' ? 'Screen' : (sel === '11' ? 'Keyboard' : 'RAM16K');
+}
+
+function tick() {
+  ram[24576] = physicalKey || virtualKey || latchedKey;
+  if (!paused) {
+    for (let i = 0; i < 2000; i++) stepCPU();
+  }
+  render();
+  requestAnimationFrame(tick);
+}
+
+renderMem();
+resetK24();
+requestAnimationFrame(tick);
+
+// ---- Capstone Source Viewer & Part B Two-Pass Assembler Demo ----
+const CAPSTONE_SOURCES = {"CPU.hdl":"// ============================================================================\n// Nand to Tetris - I (ETCCNT301) Capstone Project: Make the Computer Draw a Box\n// Student  : Prabhat Tewatia\n// Roll No. : 2501730207  (Personal Number K = 07)\n// File     : capstone/CPU.hdl\n// ============================================================================\n\n/**\n * The Hack Central Processing Unit (CPU).\n *\n * Instruction format (16 bits):\n *   A-instruction: 0 vvvvvvvvvvvvvvv  (loads 15-bit constant into A)\n *   C-instruction: 1 1 1 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3\n *     - bit 15     : opcode (0 = A-inst, 1 = C-inst)\n *     - bit 12     : a-bit  (0 = use A register, 1 = use inM)\n *     - bits 11..6 : ALU control bits (zx, nx, zy, ny, f, no)\n *     - bits 5..3  : destination bits (d1=A, d2=D, d3=M)\n *     - bits 2..0  : jump condition bits (j1=<0, j2==0, j3=>0)\n *\n * Note: Uses built-in ARegister, DRegister, ALU, and PC (ARegister and\n * DRegister are inspected directly by the official CPU.tst and Computer*.tst).\n */\n\nCHIP CPU {\n\n    IN  inM[16],         // M value input  (M = contents of RAM[A])\n        instruction[16], // Instruction for execution\n        reset;           // Signals whether to restart the current program\n                         // (reset==1) or continue executing (reset==0).\n\n    OUT outM[16],        // M value output\n        writeM,          // Write to M?\n        addressM[15],    // Address in data memory (of M)\n        pc[15];          // Address of next instruction\n\n    PARTS:\n    // --- 1. Instruction Type Decoding ---\n    // instruction[15] == 0 -> A-instruction; instruction[15] == 1 -> C-instruction\n    Not(in=instruction[15], out=isAInst);\n\n    // --- 2. A-Register Datapath & Control ---\n    // On A-instruction: feed raw instruction into ARegister.\n    // On C-instruction: feed ALU output into ARegister (when d1 == 1).\n    Mux16(a=instruction, b=aluOut, sel=instruction[15], out=aRegIn);\n\n    And(a=instruction[15], b=instruction[5], out=cWriteA);\n    Or(a=isAInst, b=cWriteA, out=loadA);\n    ARegister(in=aRegIn, load=loadA, out=aRegOut, out[0..14]=addressM);\n\n    // --- 3. D-Register Control ---\n    // Load D only on a C-instruction whose d2 bit (instruction[4]) is 1.\n    And(a=instruction[15], b=instruction[4], out=loadD);\n    DRegister(in=aluOut, load=loadD, out=dRegOut);\n\n    // --- 4. Memory Write Control ---\n    // Assert writeM only on a C-instruction whose d3 bit (instruction[3]) is 1.\n    And(a=instruction[15], b=instruction[3], out=writeM);\n\n    // --- 5. ALU Input Selection & Execution ---\n    // Select A or M (inM) for ALU's y-input based on the 'a' bit (instruction[12]).\n    Mux16(a=aRegOut, b=inM, sel=instruction[12], out=aluY);\n\n    ALU(x=dRegOut,\n        y=aluY,\n        zx=instruction[11],\n        nx=instruction[10],\n        zy=instruction[9],\n        ny=instruction[8],\n        f=instruction[7],\n        no=instruction[6],\n        out=aluOut,\n        out=outM,\n        zr=aluZero,\n        ng=aluNeg);\n\n    // --- 6. Jump Logic & Program Counter ---\n    // Strictly positive flag: aluPos = NOT(aluZero OR aluNeg)\n    Or(a=aluZero, b=aluNeg, out=aluLteZero);\n    Not(in=aluLteZero, out=aluPos);\n\n    // Evaluate each jump condition bit against ALU status flags\n    And(a=instruction[2], b=aluNeg,  out=jumpLT); // j1: out < 0\n    And(a=instruction[1], b=aluZero, out=jumpEQ); // j2: out == 0\n    And(a=instruction[0], b=aluPos,  out=jumpGT); // j3: out > 0\n\n    Or(a=jumpLT, b=jumpEQ, out=jumpLE);\n    Or(a=jumpLE, b=jumpGT, out=jumpRequested);\n\n    // Jumps are only permitted during C-instructions\n    And(a=instruction[15], b=jumpRequested, out=pcLoad);\n\n    // Priority inside PC: reset > load (jump to A) > inc (PC + 1)\n    PC(in=aRegOut, load=pcLoad, inc=true, reset=reset, out[0..14]=pc);\n}\n","Memory.hdl":"// ============================================================================\n// Nand to Tetris - I (ETCCNT301) Capstone Project: Make the Computer Draw a Box\n// Student  : Prabhat Tewatia\n// Roll No. : 2501730207  (Personal Number K = 07)\n// File     : capstone/Memory.hdl\n// ============================================================================\n\n/**\n * The complete address space of the Hack computer's memory,\n * including RAM and memory-mapped I/O.\n *\n * Address Map (15-bit address[0..14]):\n *   0x0000 - 0x3FFF (0     - 16383) : RAM16K   (address[14]=0  -> sel = 00 or 01)\n *   0x4000 - 0x5FFF (16384 - 24575) : Screen   (address[13..14]=10)\n *   0x6000          (24576)         : Keyboard (address[13..14]=11)\n *\n * Note: Uses built-in RAM16K, Screen, Keyboard (required by official\n * Memory.tst and Computer*.tst scripts for direct memory inspection and I/O).\n */\n\nCHIP Memory {\n    IN  in[16], load, address[15];\n    OUT out[16];\n\n    PARTS:\n    // 1. Route the write-enable (load) signal to the exact target segment\n    //    using the top two address bits address[13..14].\n    //    00 -> lower 8K RAM, 01 -> upper 8K RAM, 10 -> Screen, 11 -> Keyboard (read-only)\n    DMux4Way(in=load, sel=address[13..14],\n             a=loadRamLow, b=loadRamHigh, c=loadScreen, d=loadKbdUnused);\n\n    // Combine lower and upper 8K RAM load signals into a single RAM16K load bit\n    Or(a=loadRamLow, b=loadRamHigh, out=loadRam);\n\n    // 2. Instantiate the three memory-mapped hardware devices\n    RAM16K(in=in, load=loadRam, address=address[0..13], out=ramOut);\n    Screen(in=in, load=loadScreen, address=address[0..12], out=screenOut);\n    Keyboard(out=kbdOut);\n\n    // 3. Select the active device's output based on address[13..14]\n    Mux4Way16(a=ramOut, b=ramOut, c=screenOut, d=kbdOut,\n              sel=address[13..14], out=out);\n}\n","Computer.hdl":"// ============================================================================\n// Nand to Tetris - I (ETCCNT301) Capstone Project: Make the Computer Draw a Box\n// Student  : Prabhat Tewatia\n// Roll No. : 2501730207  (Personal Number K = 07)\n// File     : capstone/Computer.hdl\n// ============================================================================\n\n/**\n * The Hack Computer: Harvard architecture uniting ROM32K, CPU, and Memory.\n *\n * Fetch-Execute Cycle:\n *   1. ROM32K fetches the 16-bit instruction at address pc.\n *   2. CPU decodes & executes the instruction using inM (from Memory)\n *      and outputs outM, writeM, addressM, and the next pc.\n *   3. Memory reads/writes RAM, Screen, or Keyboard at addressM.\n *\n * Setting reset=1 restarts execution from ROM[0].\n */\n\nCHIP Computer {\n\n    IN reset;\n\n    PARTS:\n    // 1. Instruction Memory (32K x 16-bit ROM)\n    ROM32K(address=pc, out=instruction);\n\n    // 2. Central Processing Unit\n    CPU(inM=memOut,\n        instruction=instruction,\n        reset=reset,\n        outM=outM,\n        writeM=writeM,\n        addressM=addressM,\n        pc=pc);\n\n    // 3. Data Memory + Memory-Mapped I/O (RAM16K + Screen + Keyboard)\n    Memory(in=outM, load=writeM, address=addressM, out=memOut);\n}\n","assembler.py":"#!/usr/bin/env python3\n\"\"\"\nNand to Tetris - I (ETCCNT301) Capstone Project: Part B - Hack Assembler\nStudent  : Prabhat Tewatia\nRoll No. : 2501730207\nPersonal Number K = 07  (K mod 3 = 0)\n\nAssembler validation:\n    Prints a clear warning whenever the same label (LABEL) is declared\n    more than once, reporting both the duplicate line number and the\n    original line number / ROM address.\n\nUsage:\n    python assembler.py <input.asm> [output.hack]\n\n    If output.hack is omitted, writes <input_stem>.hack next to <input.asm>.\n\"\"\"\n\nfrom pathlib import Path\nimport sys\n\n\n# ---------------------------------------------------------------------------\n# Hack Machine Language Lookup Tables (Chapter 6 Specification)\n# ---------------------------------------------------------------------------\n\nPREDEFINED_SYMBOLS: dict[str, int] = {\n    \"SP\": 0,\n    \"LCL\": 1,\n    \"ARG\": 2,\n    \"THIS\": 3,\n    \"THAT\": 4,\n    **{f\"R{i}\": i for i in range(16)},\n    \"SCREEN\": 16384,\n    \"KBD\": 24576,\n}\n\n# comp -> 7-bit string: a c1 c2 c3 c4 c5 c6\nCOMP_TABLE: dict[str, str] = {\n    # a = 0 (ALU operates on D and A)\n    \"0\":   \"0101010\",\n    \"1\":   \"0111111\",\n    \"-1\":  \"0111010\",\n    \"D\":   \"0001100\",\n    \"A\":   \"0110000\",\n    \"!D\":  \"0001101\",\n    \"!A\":  \"0110001\",\n    \"-D\":  \"0001111\",\n    \"-A\":  \"0110011\",\n    \"D+1\": \"0011111\",\n    \"A+1\": \"0110111\",\n    \"D-1\": \"0001110\",\n    \"A-1\": \"0110010\",\n    \"D+A\": \"0000010\",\n    \"A+D\": \"0000010\",  # commutative alias\n    \"D-A\": \"0010011\",\n    \"A-D\": \"0000111\",\n    \"D&A\": \"0000000\",\n    \"A&D\": \"0000000\",  # commutative alias\n    \"D|A\": \"0010101\",\n    \"A|D\": \"0010101\",  # commutative alias\n    # a = 1 (ALU operates on D and M)\n    \"M\":   \"1110000\",\n    \"!M\":  \"1110001\",\n    \"-M\":  \"1110011\",\n    \"M+1\": \"1110111\",\n    \"M-1\": \"1110010\",\n    \"D+M\": \"1000010\",\n    \"M+D\": \"1000010\",  # commutative alias\n    \"D-M\": \"1010011\",\n    \"M-D\": \"1000111\",\n    \"D&M\": \"1000000\",\n    \"M&D\": \"1000000\",  # commutative alias\n    \"D|M\": \"1010101\",\n    \"M|D\": \"1010101\",  # commutative alias\n}\n\n# dest -> 3-bit string: d1(A) d2(D) d3(M)\nDEST_TABLE: dict[str, str] = {\n    \"\":    \"000\",\n    \"M\":   \"001\",\n    \"D\":   \"010\",\n    \"MD\":  \"011\",\n    \"DM\":  \"011\",  # alternate ordering\n    \"A\":   \"100\",\n    \"AM\":  \"101\",\n    \"MA\":  \"101\",  # alternate ordering\n    \"AD\":  \"110\",\n    \"DA\":  \"110\",  # alternate ordering\n    \"AMD\": \"111\",\n}\n\n# jump -> 3-bit string: j1(<0) j2(==0) j3(>0)\nJUMP_TABLE: dict[str, str] = {\n    \"\":    \"000\",\n    \"JGT\": \"001\",\n    \"JEQ\": \"010\",\n    \"JGE\": \"011\",\n    \"JLT\": \"100\",\n    \"JNE\": \"101\",\n    \"JLE\": \"110\",\n    \"JMP\": \"111\",\n}\n\n\n# ---------------------------------------------------------------------------\n# Helper Functions\n# ---------------------------------------------------------------------------\n\ndef clean_line(raw_line: str) -> str:\n    \"\"\"Remove inline '//' comments and all whitespace from a source line.\"\"\"\n    no_comment = raw_line.split(\"//\", 1)[0]\n    return \"\".join(no_comment.split())\n\n\ndef encode_a_instruction(\n    operand: str,\n    symbol_table: dict[str, int],\n    next_ram_addr: int,\n    line_no: int,\n) -> tuple[str, int]:\n    \"\"\"\n    Translate an A-instruction (@value or @symbol) into a 16-bit binary string.\n    Returns (binary_16bit, updated_next_ram_addr).\n    \"\"\"\n    if not operand:\n        raise ValueError(f\"Line {line_no}: empty A-instruction '@'\")\n\n    if operand.isdigit():\n        value = int(operand)\n        if not (0 <= value <= 32767):\n            raise ValueError(\n                f\"Line {line_no}: A-instruction constant '{value}' out of 15-bit range (0..32767)\"\n            )\n    else:\n        if operand not in symbol_table:\n            symbol_table[operand] = next_ram_addr\n            next_ram_addr += 1\n        value = symbol_table[operand]\n\n    return f\"0{value:015b}\", next_ram_addr\n\n\ndef encode_c_instruction(instruction: str, line_no: int) -> str:\n    \"\"\"\n    Translate a C-instruction ([dest=]comp[;jump]) into a 16-bit binary string:\n        111 + comp(7) + dest(3) + jump(3)\n    \"\"\"\n    dest = \"\"\n    jump = \"\"\n    rest = instruction\n\n    if \"=\" in rest:\n        dest, rest = rest.split(\"=\", 1)\n    if \";\" in rest:\n        comp, jump = rest.split(\";\", 1)\n    else:\n        comp = rest\n\n    if dest not in DEST_TABLE:\n        raise ValueError(f\"Line {line_no}: invalid dest field '{dest}' in '{instruction}'\")\n    if comp not in COMP_TABLE:\n        raise ValueError(f\"Line {line_no}: invalid comp field '{comp}' in '{instruction}'\")\n    if jump not in JUMP_TABLE:\n        raise ValueError(f\"Line {line_no}: invalid jump field '{jump}' in '{instruction}'\")\n\n    return f\"111{COMP_TABLE[comp]}{DEST_TABLE[dest]}{JUMP_TABLE[jump]}\"\n\n\n# ---------------------------------------------------------------------------\n# Two-Pass Assembler Core\n# ---------------------------------------------------------------------------\n\ndef assemble(source_lines: list[str]) -> tuple[list[str], list[str], dict[str, int]]:\n    \"\"\"\n    Run the two-pass Hack assembler over source_lines.\n\n    Returns:\n        machine_code : list of 16-bit binary strings\n        warnings     : list of duplicate-label validation messages\n        symbol_table : final symbol table (predefined + labels + variables)\n    \"\"\"\n    symbol_table: dict[str, int] = dict(PREDEFINED_SYMBOLS)\n    defined_labels: dict[str, tuple[int, int]] = {}  # label -> (first_line_no, rom_addr)\n    warnings: list[str] = []\n    instructions: list[tuple[int, str]] = []  # (original_line_no, cleaned_instruction)\n\n    # ---------------- PASS 1: Strip comments & record (LABEL) positions ----------------\n    rom_address = 0\n    for line_no, raw_line in enumerate(source_lines, start=1):\n        code = clean_line(raw_line)\n        if not code:\n            continue\n\n        if code.startswith(\"(\") and code.endswith(\")\"):\n            label = code[1:-1]\n            if not label:\n                raise ValueError(f\"Line {line_no}: empty label declaration '()'\")\n\n            # Duplicate-label validation:\n            # Warn whenever the same label is written more than once.\n            if label in defined_labels:\n                first_line, first_rom = defined_labels[label]\n                warnings.append(\n                    f\"WARNING (Line {line_no}): Duplicate label '({label})' — \"\n                    f\"already declared at Line {first_line} (ROM address {first_rom}). \"\n                    f\"Keeping first definition.\"\n                )\n            else:\n                defined_labels[label] = (line_no, rom_address)\n                symbol_table[label] = rom_address\n        else:\n            instructions.append((line_no, code))\n            rom_address += 1\n\n    # ---------------- PASS 2: Translate instructions & allocate variables --------------\n    machine_code: list[str] = []\n    next_ram_addr = 16  # User variables start at RAM[16]\n\n    for line_no, code in instructions:\n        if code.startswith(\"@\"):\n            binary, next_ram_addr = encode_a_instruction(\n                code[1:], symbol_table, next_ram_addr, line_no\n            )\n        else:\n            binary = encode_c_instruction(code, line_no)\n        machine_code.append(binary)\n\n    return machine_code, warnings, symbol_table\n\n\ndef assemble_file(input_path: Path, output_path: Path | None = None) -> tuple[Path, int, list[str]]:\n    \"\"\"Assemble an .asm file on disk and write the resulting .hack file.\"\"\"\n    if not input_path.is_file():\n        raise FileNotFoundError(f\"Input file not found: {input_path}\")\n\n    if output_path is None:\n        output_path = input_path.with_suffix(\".hack\")\n\n    source_lines = input_path.read_text(encoding=\"utf-8\").splitlines()\n    machine_code, warnings, _ = assemble(source_lines)\n\n    for warning in warnings:\n        print(warning, file=sys.stderr)\n\n    output_text = \"\\n\".join(machine_code) + (\"\\n\" if machine_code else \"\")\n    output_path.write_text(output_text, encoding=\"utf-8\")\n    return output_path, len(machine_code), warnings\n\n\ndef main(argv: list[str]) -> int:\n    if len(argv) < 2 or len(argv) > 3:\n        print(\"Usage: python assembler.py <input.asm> [output.hack]\", file=sys.stderr)\n        return 1\n\n    input_path = Path(argv[1])\n    output_path = Path(argv[2]) if len(argv) == 3 else None\n\n    try:\n        written_path, count, warnings = assemble_file(input_path, output_path)\n    except (FileNotFoundError, ValueError) as exc:\n        print(f\"Error: {exc}\", file=sys.stderr)\n        return 1\n\n    print(\n        f\"Assembled {input_path.name} -> {written_path.name} \"\n        f\"({count} instructions, {len(warnings)} warning(s))\"\n    )\n    return 0\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main(sys.argv))\n","Box.asm":"// Box.asm — Nand to Tetris I (ETCCNT301) Capstone Project\n// Name: Prabhat Tewatia | Roll No: 2501730207 | K = 07\n//\n// Hold ANY keyboard key: draw a 16x20 black box at row 24 and show \"07\"\n// in white pixels inside it. Release the key: clear the box and the number.\n// Start address: SCREEN (16384) + 32 * 24 = 17152\n// Box height: 20 rows (24..43); width: 1 word = 16 pixels.\n// The 5x7 digits are centered in the 16x20 box.\n\n    @17152          // Row 24 start address\n    D=A\n    @start_addr\n    M=D\n\n    @20             // Box height\n    D=A\n    @height\n    M=D\n\n    @1              // Box width: one 16-pixel word\n    D=A\n    @width\n    M=D\n\n    @prev_color\n    M=0\n\n// Poll keyboard continuously.\n(MAIN_LOOP)\n    @KBD\n    D=M\n    @SET_WHITE\n    D;JEQ\n    @color\n    M=-1             // Key pressed: black background\n    @CHECK_CHANGE\n    0;JMP\n\n(SET_WHITE)\n    @color\n    M=0              // Key released: clear to white\n\n(CHECK_CHANGE)\n    @color\n    D=M\n    @prev_color\n    D=D-M\n    @MAIN_LOOP\n    D;JEQ             // Redraw only when key state changes\n\n    @color\n    D=M\n    @prev_color\n    M=D\n\n// Fill the 16x20 rectangle with the selected color.\n(DRAW_BOX)\n    @start_addr\n    D=M\n    @row_base\n    M=D\n    @height\n    D=M\n    @rows_left\n    M=D\n\n(ROW_LOOP)\n    @rows_left\n    D=M\n    @DRAW_NUMBER\n    D;JEQ\n    @row_base\n    D=M\n    @addr\n    M=D\n    @width\n    D=M\n    @cols_left\n    M=D\n\n(COL_LOOP)\n    @cols_left\n    D=M\n    @NEXT_ROW\n    D;JEQ\n    @color\n    D=M\n    @addr\n    A=M\n    M=D\n    @addr\n    M=M+1\n    @cols_left\n    M=M-1\n    @COL_LOOP\n    0;JMP\n\n(NEXT_ROW)\n    @32\n    D=A\n    @row_base\n    M=D+M\n    @rows_left\n    M=M-1\n    @ROW_LOOP\n    0;JMP\n\n// Overlay white 5x7 digits \"07\" only on the black box.\n(DRAW_NUMBER)\n    @color\n    D=M\n    @MAIN_LOOP\n    D;JEQ             // White state: no number to draw\n\n    // Start at row 30 (row 24 + 6), centered vertically.\n    @17152\n    D=A\n    @192\n    D=D+A\n    @glyph_addr\n    M=D\n\n    // Each complement is loaded then inverted to create the 16-bit screen word.\n    @3708            // Row 1: top strokes of 2 and 4\n    D=A\n    D=!D\n    @glyph_addr\n    A=M\n    M=D\n    @32\n    D=A\n    @glyph_addr\n    M=D+M\n    @4356            // Row 2: upper right of 2 and both sides of 4\n    D=A\n    D=!D\n    @glyph_addr\n    A=M\n    M=D\n    @32\n    D=A\n    @glyph_addr\n    M=D+M\n    @4872            // Row 3: upper right of 2 and both sides of 4\n    D=A\n    D=!D\n    @glyph_addr\n    A=M\n    M=D\n    @32\n    D=A\n    @glyph_addr\n    M=D+M\n    @5392            // Row 4: middle bars of 2 and 4\n    D=A\n    D=!D\n    @glyph_addr\n    A=M\n    M=D\n    @32\n    D=A\n    @glyph_addr\n    M=D+M\n    @6432            // Row 5: lower left of 2 and lower right of 4\n    D=A\n    D=!D\n    @glyph_addr\n    A=M\n    M=D\n    @32\n    D=A\n    @glyph_addr\n    M=D+M\n    @4384            // Row 6: lower left of 2 and lower right of 4\n    D=A\n    D=!D\n    @glyph_addr\n    A=M\n    M=D\n    @32\n    D=A\n    @glyph_addr\n    M=D+M\n    @3616            // Row 7: bottom of 2 and foot of 4\n    D=A\n    D=!D\n    @glyph_addr\n    A=M\n    M=D\n    @MAIN_LOOP\n    0;JMP\n","Box.hack":"0100001100000000\n1110110000010000\n0000000000010000\n1110001100001000\n0000000000010100\n1110110000010000\n0000000000010001\n1110001100001000\n0000000000000001\n1110110000010000\n0000000000010010\n1110001100001000\n0000000000010011\n1110101010001000\n0110000000000000\n1111110000010000\n0000000000010110\n1110001100000010\n0000000000010100\n1110111010001000\n0000000000011000\n1110101010000111\n0000000000010100\n1110101010001000\n0000000000010100\n1111110000010000\n0000000000010011\n1111010011010000\n0000000000001110\n1110001100000010\n0000000000010100\n1111110000010000\n0000000000010011\n1110001100001000\n0000000000010000\n1111110000010000\n0000000000010101\n1110001100001000\n0000000000010001\n1111110000010000\n0000000000010110\n1110001100001000\n0000000000010110\n1111110000010000\n0000000001001101\n1110001100000010\n0000000000010101\n1111110000010000\n0000000000010111\n1110001100001000\n0000000000010010\n1111110000010000\n0000000000011000\n1110001100001000\n0000000000011000\n1111110000010000\n0000000001000101\n1110001100000010\n0000000000010100\n1111110000010000\n0000000000010111\n1111110000100000\n1110001100001000\n0000000000010111\n1111110111001000\n0000000000011000\n1111110010001000\n0000000000110110\n1110101010000111\n0000000000100000\n1110110000010000\n0000000000010101\n1111000010001000\n0000000000010110\n1111110010001000\n0000000000101010\n1110101010000111\n0000000000010100\n1111110000010000\n0000000000001110\n1110001100000010\n0100001100000000\n1110110000010000\n0000000011000000\n1110000010010000\n0000000000011001\n1110001100001000\n0000111001111100\n1110110000010000\n1110001101010000\n0000000000011001\n1111110000100000\n1110001100001000\n0000000000100000\n1110110000010000\n0000000000011001\n1111000010001000\n0001000100000100\n1110110000010000\n1110001101010000\n0000000000011001\n1111110000100000\n1110001100001000\n0000000000100000\n1110110000010000\n0000000000011001\n1111000010001000\n0001001100001000\n1110110000010000\n1110001101010000\n0000000000011001\n1111110000100000\n1110001100001000\n0000000000100000\n1110110000010000\n0000000000011001\n1111000010001000\n0001010100010000\n1110110000010000\n1110001101010000\n0000000000011001\n1111110000100000\n1110001100001000\n0000000000100000\n1110110000010000\n0000000000011001\n1111000010001000\n0001100100100000\n1110110000010000\n1110001101010000\n0000000000011001\n1111110000100000\n1110001100001000\n0000000000100000\n1110110000010000\n0000000000011001\n1111000010001000\n0001000100100000\n1110110000010000\n1110001101010000\n0000000000011001\n1111110000100000\n1110001100001000\n0000000000100000\n1110110000010000\n0000000000011001\n1111000010001000\n0000111000100000\n1110110000010000\n1110001101010000\n0000000000011001\n1111110000100000\n1110001100001000\n0000000000001110\n1110101010000111\n","test_dup_labels.asm":"// Assembler validation test: duplicate labels should produce a warning\n(LOOP)\n@LOOP\n0;JMP\n(LOOP)\n@0\n"};
+
+function setActiveTab(btn) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('tab-active'));
+  btn.classList.add('tab-active');
+}
+
+function showPartA(file, btn) {
+  if (btn) setActiveTab(btn);
+  document.getElementById('partACode').textContent = CAPSTONE_SOURCES[file];
+}
+
+function showPartB(mode, btn) {
+  if (btn) setActiveTab(btn);
+  const isCode = mode === 'code';
+  document.getElementById('partBCode').style.display = isCode ? 'block' : 'none';
+  document.getElementById('copyPartBBtn').style.display = isCode ? 'inline-block' : 'none';
+  document.getElementById('partBTry').style.display = isCode ? 'none' : 'block';
+  if (!isCode && !document.getElementById('asmInput').value) {
+    loadAsmSample('test_dup_labels.asm');
+  }
+}
+
+function showPartC(file, btn) {
+  if (btn) setActiveTab(btn);
+  document.getElementById('partCCode').textContent = CAPSTONE_SOURCES[file];
+}
+
+function copyCode(preId, btn) {
+  const text = document.getElementById(preId).textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      const old = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(() => btn.textContent = old, 1200);
+    });
+  }
+}
+
+const ASM_COMP = {
+  '0':'0101010','1':'0111111','-1':'0111010','D':'0001100','A':'0110000',
+  '!D':'0001101','!A':'0110001','-D':'0001111','-A':'0110011','D+1':'0011111',
+  'A+1':'0110111','D-1':'0001110','A-1':'0110010','D+A':'0000010','A+D':'0000010',
+  'D-A':'0010011','A-D':'0000111','D&A':'0000000','A&D':'0000000','D|A':'0010101','A|D':'0010101',
+  'M':'1110000','!M':'1110001','-M':'1110011','M+1':'1110111','M-1':'1110010',
+  'D+M':'1000010','M+D':'1000010','D-M':'1010011','M-D':'1000111','D&M':'1000000',
+  'M&D':'1000000','D|M':'1010101','M|D':'1010101'
+};
+const ASM_DEST = {
+  '':'000','M':'001','D':'010','MD':'011','DM':'011','A':'100','AM':'101','MA':'101','AD':'110','DA':'110','AMD':'111'
+};
+const ASM_JUMP = {
+  '':'000','JGT':'001','JEQ':'010','JGE':'011','JLT':'100','JNE':'101','JLE':'110','JMP':'111'
+};
+
+function loadAsmSample(name) {
+  document.getElementById('asmInput').value = CAPSTONE_SOURCES[name];
+  runBrowserAssembler();
+}
+
+function runBrowserAssembler() {
+  const lines = document.getElementById('asmInput').value.split(/\r?\n/);
+  const sym = { SP:0, LCL:1, ARG:2, THIS:3, THAT:4, SCREEN:16384, KBD:24576 };
+  for (let i = 0; i < 16; i++) sym['R' + i] = i;
+
+  const definedLabels = {};
+  const warnings = [];
+  const insts = [];
+  let romAddr = 0;
+
+  const warnBox = document.getElementById('asmWarn');
+  const errBox = document.getElementById('asmErr');
+  warnBox.style.display = 'none';
+  errBox.style.display = 'none';
+
+  try {
+    lines.forEach((raw, idx) => {
+      const lineNo = idx + 1;
+      const code = raw.split('//')[0].replace(/\s+/g, '');
+      if (!code) return;
+      if (code.startsWith('(') && code.endsWith(')')) {
+        const lbl = code.slice(1, -1);
+        if (!lbl) throw new Error(`Line ${lineNo}: empty label '()'`);
+        if (lbl in definedLabels) {
+          const [firstLine, firstRom] = definedLabels[lbl];
+          warnings.push(`WARNING (Line ${lineNo}): Duplicate label '(${lbl})' — already declared at Line ${firstLine} (ROM address ${firstRom}). Keeping first definition.`);
+        } else {
+          definedLabels[lbl] = [lineNo, romAddr];
+          sym[lbl] = romAddr;
+        }
+      } else {
+        insts.push([lineNo, code]);
+        romAddr++;
+      }
+    });
+
+    let nextRam = 16;
+    const out = [];
+    for (const [lineNo, code] of insts) {
+      if (code.startsWith('@')) {
+        const op = code.slice(1);
+        if (!op) throw new Error(`Line ${lineNo}: empty A-instruction`);
+        let val;
+        if (/^\d+$/.test(op)) {
+          val = parseInt(op, 10);
+          if (val < 0 || val > 32767) throw new Error(`Line ${lineNo}: constant ${val} out of range`);
+        } else {
+          if (!(op in sym)) sym[op] = nextRam++;
+          val = sym[op];
+        }
+        out.push('0' + val.toString(2).padStart(15, '0'));
+      } else {
+        let dest = '', jump = '', rest = code;
+        if (rest.includes('=')) { const p = rest.split('='); dest = p[0]; rest = p.slice(1).join('='); }
+        let comp = rest;
+        if (rest.includes(';')) { const p = rest.split(';'); comp = p[0]; jump = p.slice(1).join(';'); }
+        if (!(dest in ASM_DEST)) throw new Error(`Line ${lineNo}: invalid dest '${dest}'`);
+        if (!(comp in ASM_COMP)) throw new Error(`Line ${lineNo}: invalid comp '${comp}'`);
+        if (!(jump in ASM_JUMP)) throw new Error(`Line ${lineNo}: invalid jump '${jump}'`);
+        out.push('111' + ASM_COMP[comp] + ASM_DEST[dest] + ASM_JUMP[jump]);
+      }
+    }
+
+    if (warnings.length) {
+      warnBox.textContent = warnings.join('\n');
+      warnBox.style.display = 'block';
+    }
+    document.getElementById('asmOutput').textContent = out.join('\n');
+    document.getElementById('asmOutLabel').textContent =
+      `Generated Machine Code (.hack) — ${out.length} instructions, ${warnings.length} warning(s)`;
+  } catch (e) {
+    errBox.textContent = 'Error: ' + e.message;
+    errBox.style.display = 'block';
+    document.getElementById('asmOutput').textContent = '';
+  }
+}
+
+showPartA('CPU.hdl');
+document.getElementById('partBCode').textContent = CAPSTONE_SOURCES['assembler.py'];
+showPartC('Box.asm');
+
+</script>
+</body>
+</html>

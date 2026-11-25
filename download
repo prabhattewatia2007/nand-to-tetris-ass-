@@ -1,0 +1,9 @@
+# Local Nand2Tetris software suite (downloaded for verification)
+nand2tetris_suite/
+
+# Temporary GUI staging & simulator output files
+tests/gui_stage/
+*.out
+__pycache__/
+*.pyc
+.DS_Store
